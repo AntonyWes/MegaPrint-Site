@@ -24,6 +24,48 @@
   updateHeader();
   window.addEventListener("scroll", updateHeader, { passive: true });
 
+  /* ===== Random 5-star reviews ===== */
+  const reviewPool = Array.isArray(window.MEGAPRINT_REVIEWS) ? window.MEGAPRINT_REVIEWS : [];
+
+  const escapeHtml = (value) =>
+    String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[character]));
+
+  const renderRandomReviews = () => {
+    const grid = $(".reviews-grid");
+    if (!grid || reviewPool.length < 3) return;
+
+    const shuffled = reviewPool.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const randomIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    }
+
+    const cardStyles = ["review--ink", "review--pink", "review--cyan"];
+    const star = '<svg class="icon icon--fill" aria-hidden="true"><use href="#i-star"/></svg>';
+
+    grid.innerHTML = shuffled
+      .slice(0, 3)
+      .map(
+        (review, index) => `
+          <article class="review ${cardStyles[index]}" data-reveal style="--delay: ${index * 80}ms">
+            <svg class="review__quote" aria-hidden="true"><use href="#i-quote"/></svg>
+            <span class="stars" role="img" aria-label="Оценка 5 из 5">${star.repeat(5)}</span>
+            <blockquote>${escapeHtml(review.text)}</blockquote>
+            <footer><span>${escapeHtml(review.name)}</span><span>${escapeHtml(review.source)}</span></footer>
+          </article>
+        `
+      )
+      .join("");
+  };
+
+  renderRandomReviews();
+
   /* ===== Reveal on scroll ===== */
   const revealItems = $$("[data-reveal]");
   if (!reduceMotion && "IntersectionObserver" in window) {
